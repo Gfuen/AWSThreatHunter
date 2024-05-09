@@ -39,61 +39,47 @@ def list_roles(profile_name=None):
 
 def start_policy_generation(profile_name, entity_name, account_id, cloudtrail):
     try:
-        regions = [
-            'eu-north-1', 'ap-south-1', 'eu-west-3', 'eu-west-2',
-            'eu-west-1', 'ap-northeast-3', 'ap-northeast-2'
-            'ap-northeast-1', 'sa-east-1', 'ca-central-1', 
-            'ap-southeast-2', 'eu-central-1', 'us-east-1', 'us-east-2',
-            'us-west-1', 'us-west-2']
-        for r in regions:
-            session = boto3.Session(profile_name=profile_name)
-            analyzer_client = session.client('accessanalyzer', region_name=r)
-            response = analyzer_client.start_policy_generation(
-                policyGenerationDetails={
-                    'principalArn': f"arn:aws:iam::{account_id}:{entity_name}"
-                },
-                cloudTrailDetails={
-                    'trails': [
-                        {
-                            'cloudTrailArn': 'string',
-                            'regions': [
-                                'string',
-                            ],
-                            'allRegions': True|False
-                        },
-                    ],
-                    'accessRole': 'string',
-                    'startTime': datetime(2015, 1, 1),    
-                    'endTime': datetime(2015, 1, 1)                       
-                }         
-            )
-            return response['jobId']
+        session = boto3.Session(profile_name=profile_name)
+        analyzer_client = session.client('accessanalyzer', region_name=r)
+        response = analyzer_client.start_policy_generation(
+            policyGenerationDetails={
+                'principalArn': f"arn:aws:iam::{account_id}:{entity_name}"
+            },
+            cloudTrailDetails={
+                'trails': [
+                    {
+                        'cloudTrailArn': 'string',
+                        'regions': [
+                            'string',
+                        ],
+                        'allRegions': True|False
+                    },
+                ],
+                'accessRole': 'string',
+                'startTime': datetime(2015, 1, 1),    
+                'endTime': datetime(2015, 1, 1)                       
+            }         
+        )
+        return response['jobId']
     except Exception as e:
         print(f"Error occurred while starting policy generation: {e}")
         return None
 
 def get_generated_policy(profile_name, job_id):
     try:
-        regions = [
-            'eu-north-1', 'ap-south-1', 'eu-west-3', 'eu-west-2',
-            'eu-west-1', 'ap-northeast-3', 'ap-northeast-2'
-            'ap-northeast-1', 'sa-east-1', 'ca-central-1', 
-            'ap-southeast-2', 'eu-central-1', 'us-east-1', 'us-east-2',
-            'us-west-1', 'us-west-2']
-        for r in regions:
-            session = boto3.Session(profile_name=profile_name)
-            analyzer_client = session.client('accessanalyzer', region_name=r)
-            while True:
-                response = analyzer_client.get_generated_policy(jobId=job_id)
-                status = response['status']
-                if status == 'COMPLETE':
-                    return response['policy']
-                elif status == 'FAILED':
-                    print(f"Policy generation failed for job ID {job_id}")
-                    return None
-                else:
-                    print(f"Policy generation in progress for job ID {job_id}, status: {status}. Waiting...")
-                    time.sleep(5)
+        session = boto3.Session(profile_name=profile_name)
+        analyzer_client = session.client('accessanalyzer', region_name=r)
+        while True:
+            response = analyzer_client.get_generated_policy(jobId=job_id)
+            status = response['status']
+            if status == 'COMPLETE':
+                return response['policy']
+            elif status == 'FAILED':
+                print(f"Policy generation failed for job ID {job_id}")
+                return None
+            else:
+                print(f"Policy generation in progress for job ID {job_id}, status: {status}. Waiting...")
+                time.sleep(5)
     except Exception as e:
         print(f"Error occurred while getting generated policy: {e}")
         return None
